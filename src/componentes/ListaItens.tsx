@@ -9,7 +9,7 @@ import { Item } from '../tipos';
 /** Lista (ou grade) de desejos com o menu de segurar (editar / excluir). */
 export function ListaItens({ itens, grade }: { itens: Item[]; grade: boolean }) {
   const nav = useNavigation<any>();
-  const { caminho, excluirItem } = useDados();
+  const { caminho, excluirItem, reabrirItem } = useDados();
   const [menu, setMenu] = useState<Item | null>(null);
 
   const cartao = (i: Item) => (
@@ -38,6 +38,15 @@ export function ListaItens({ itens, grade }: { itens: Item[]; grade: boolean }) 
       <FolhaInferior visivel={!!menu} aoFechar={() => setMenu(null)} titulo={menu?.nome}>
         <Opcao
           primeira
+          rotulo={menu?.selo ? 'Reabrir' : 'Concluir e avaliar'}
+          onPress={() => {
+            const alvo = menu!;
+            setMenu(null);
+            if (alvo.selo) reabrirItem(alvo.id);
+            else nav.navigate('Concluir', { id: alvo.id });
+          }}
+        />
+        <Opcao
           rotulo="Editar"
           onPress={() => {
             const id = menu!.id;

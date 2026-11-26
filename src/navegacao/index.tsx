@@ -14,6 +14,8 @@ import { Categorias } from '../telas/Categorias';
 import { Perfil } from '../telas/Perfil';
 import { Categoria } from '../telas/Categoria';
 import { FormCategoria } from '../telas/FormCategoria';
+import { Concluir } from '../telas/Concluir';
+import { MeusSelos } from '../telas/MeusSelos';
 import { Detalhes } from '../telas/Detalhes';
 import { FormItem } from '../telas/FormItem';
 import { AvisoDesfazer } from '../componentes/AvisoDesfazer';
@@ -70,6 +72,8 @@ export function Navegacao() {
           <Pilha.Screen name="FormCategoria" component={FormCategoria} />
           <Pilha.Screen name="Detalhes" component={Detalhes} />
           <Pilha.Screen name="FormItem" component={FormItem} />
+          <Pilha.Screen name="Concluir" component={Concluir} />
+          <Pilha.Screen name="MeusSelos" component={MeusSelos} />
         </Pilha.Navigator>
       ) : (
         <Auth.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: cores.fundo } }}>

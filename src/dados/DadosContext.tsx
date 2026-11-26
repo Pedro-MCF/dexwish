@@ -1,7 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { supabase, traduzirErro } from '../lib/supabase';
 import { useSessao, Resultado } from '../sessao/SessaoContext';
-import { Categoria, Item, itemDeLinha, Prioridade, Selo } from '../tipos';
+import { Categoria, Item, itemDeLinha, NOME_SELO_PADRAO, Prioridade, Selo } from '../tipos';
 import { normalizar } from '../util/formatar';
 
 export type SubForm = { id?: string; nome: string };
@@ -18,7 +18,13 @@ export type DadosItem = {
   imagem: string;
 };
 
+export type DadosConclusao = { selo: string; nota: number | null; comentario: string };
+
 type DadosCtx = {
+  concluirItem: (id: string, d: DadosConclusao) => Promise<Resultado>;
+  reabrirItem: (id: string) => Promise<Resultado>;
+  criarSelo: (nome: string) => Promise<Resultado>;
+  excluirSelo: (id: string) => Promise<Resultado>;
   ultimaExclusao: { id: string; nome: string } | null;
   salvarItem: (d: DadosItem) => Promise<Resultado & { id?: string }>;
   excluirItem: (id: string) => Promise<Resultado>;
@@ -234,14 +240,81 @@ export function DadosProvider({ children }: { children: React.ReactNode }) {
 
   const limparExclusao = useCallback(() => setUltimaExclusao(null), []);
 
+  // ---------- conclusão e selos ----------
+  const concluirItem = useCallback(
+    async (id: string, d: DadosConclusao): Promise<Resultado> => {
+      const { error } = await supabase
+        .from('item')
+        .update({
+          concluido: true,
+          selo: d.selo,
+          nota: d.nota,
+          comentario: d.comentario.trim(),
+          concluido_em: new Date().toISOString(),
+        })
+        .eq('id', id);
+      if (error) return { erro: traduzirErro(error.message) };
+      await recarregar();
+      return {};
+    },
+    [recarregar],
+  );
+
+  const reabrirItem = useCallback(
+    async (id: string): Promise<Resultado> => {
+      const { error } = await supabase
+        .from('item')
+        .update({ concluido: false, selo: null, nota: null, comentario: '', concluido_em: null })
+        .eq('id', id);
+      if (error) return { erro: traduzirErro(error.message) };
+      await recarregar();
+      return {};
+    },
+    [recarregar],
+  );
+
+  const criarSelo = useCallback(
+    async (nome: string): Promise<Resultado> => {
+      const n = nome.trim();
+      if (!n) return { erro: 'Faltou o nome do selo.' };
+      if (normalizar(n) === normalizar(NOME_SELO_PADRAO) || selos.some((x) => normalizar(x.nome) === normalizar(n))) {
+        return { erro: 'Já existe um selo com esse nome.' };
+      }
+      const { error } = await supabase.from('selo').insert({ nome: n, id_usuario: uid });
+      if (error) return { erro: traduzirErro(error.message) };
+      await recarregar();
+      return {};
+    },
+    [selos, uid, recarregar],
+  );
+
+  const excluirSelo = useCallback(
+    async (id: string): Promise<Resultado> => {
+      const alvo = selos.find((x) => x.id === id);
+      if (alvo) {
+        // os desejos que tinham esse selo voltam para a lista em aberto
+        await supabase
+          .from('item')
+          .update({ concluido: false, selo: null, nota: null, comentario: '', concluido_em: null })
+          .eq('selo', alvo.nome);
+      }
+      const { error } = await supabase.from('selo').delete().eq('id', id);
+      if (error) return { erro: traduzirErro(error.message) };
+      await recarregar();
+      return {};
+    },
+    [selos, recarregar],
+  );
+
   const valor = useMemo(
     () => ({
       categorias, itens, selos, carregando, erro, recarregar,
       categoria, principais, filhas, caminho, idsDe, itensDe,
       salvarCategoria, excluirCategoria,
+      concluirItem, reabrirItem, criarSelo, excluirSelo,
       ultimaExclusao, salvarItem, excluirItem, desfazerExclusao, limparExclusao,
     }),
-    [categorias, itens, selos, carregando, erro, recarregar, categoria, principais, filhas, caminho, idsDe, itensDe, salvarCategoria, excluirCategoria, ultimaExclusao, salvarItem, excluirItem, desfazerExclusao, limparExclusao],
+    [categorias, itens, selos, carregando, erro, recarregar, categoria, principais, filhas, caminho, idsDe, itensDe, salvarCategoria, excluirCategoria, concluirItem, reabrirItem, criarSelo, excluirSelo, ultimaExclusao, salvarItem, excluirItem, desfazerExclusao, limparExclusao],
   );
   return <Ctx.Provider value={valor}>{children}</Ctx.Provider>;
 }

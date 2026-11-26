@@ -6,6 +6,7 @@ import { fontes } from '../tema/cores';
 import { Item } from '../tipos';
 import { formatarPreco } from '../util/formatar';
 import { IconePrioridade } from './IconePrioridade';
+import { Selo } from './Selo';
 
 type Props = {
   item: Item;
@@ -44,12 +45,18 @@ export function CartaoItem({ item, grade, categoria, onPress, onLongPress }: Pro
           <IconePrioridade nivel={item.prioridade} altura={18} />
         </View>
       </View>
+      {item.selo ? (
+        <View style={s.selo}>
+          <Selo nome={item.selo} tamanho={grade ? 56 : 48} />
+        </View>
+      ) : null}
     </Pressable>
   );
 }
 
 const s = StyleSheet.create({
   cartao: { borderRadius: 20, overflow: 'hidden' },
+  selo: { position: 'absolute', top: 6, right: 6 },
   cartaoLista: { flexDirection: 'row', alignItems: 'center', padding: 12, gap: 12 },
   cartaoGrade: { flex: 1 },
   fotoLista: { width: 62, height: 62, borderRadius: 14 },

@@ -4,6 +4,8 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { Tela, Topo } from '../componentes/Tela';
 import { Botao } from '../componentes/Botao';
 import { Vazio } from '../componentes/Vazio';
+import { Estrelas } from '../componentes/Estrelas';
+import { Selo } from '../componentes/Selo';
 import { IconePrioridade, NOME_PRIORIDADE } from '../componentes/IconePrioridade';
 import { useTema } from '../tema/TemaContext';
 import { fontes } from '../tema/cores';
@@ -14,7 +16,7 @@ export function Detalhes() {
   const { cores } = useTema();
   const nav = useNavigation<any>();
   const { params } = useRoute<any>();
-  const { itens, caminho, excluirItem } = useDados();
+  const { itens, caminho, excluirItem, reabrirItem } = useDados();
   const i = itens.find((x) => x.id === params.id);
 
   if (!i) {
@@ -40,7 +42,10 @@ export function Detalhes() {
     <Tela>
       <Topo titulo="Detalhes do desejo" aoVoltar={() => nav.goBack()} />
       {i.imagem ? <Image source={{ uri: i.imagem }} style={s.foto} /> : null}
-      <Text style={[s.nome, { color: cores.texto }]}>{i.nome}</Text>
+      <View style={s.linha}>
+        <Text style={[s.nome, { color: cores.texto, flex: 1 }]}>{i.nome}</Text>
+        {i.selo ? <Selo nome={i.selo} tamanho={72} /> : null}
+      </View>
       <Text style={[s.sub, { color: cores.sub }]}>{caminho(i.categoria)}</Text>
 
       {i.preco !== null ? (
@@ -62,6 +67,13 @@ export function Detalhes() {
           <Text style={[s.valor, { color: cores.texto }]}>{i.descricao}</Text>
         </View>
       ) : null}
+      {i.selo ? (
+        <View style={s.bloco}>
+          <Text style={[s.rotulo, { color: cores.sub }]}>Minha avaliação</Text>
+          {i.nota ? <Estrelas valor={i.nota} tamanho={26} /> : <Text style={[s.valor, { color: cores.sub }]}>Sem nota</Text>}
+          {i.comentario ? <Text style={[s.valor, { color: cores.texto }]}>{i.comentario}</Text> : null}
+        </View>
+      ) : null}
       {i.link ? (
         <Botao
           titulo={`Abrir ${dominio(i.link)}`}
@@ -70,7 +82,12 @@ export function Detalhes() {
         />
       ) : null}
 
-      <Botao titulo="Editar" onPress={() => nav.navigate('FormItem', { id: i.id })} />
+      {i.selo ? (
+        <Botao titulo="Reabrir desejo" variante="alternativo" onPress={() => reabrirItem(i.id)} />
+      ) : (
+        <Botao titulo="Concluir e avaliar" onPress={() => nav.navigate('Concluir', { id: i.id })} />
+      )}
+      <Botao titulo="Editar" variante="alternativo" onPress={() => nav.navigate('FormItem', { id: i.id })} />
       <Botao titulo="Excluir" variante="perigo" onPress={excluir} />
     </Tela>
   );

@@ -18,4 +18,6 @@ export type RotasApp = {
   FormCategoria: { id?: string } | undefined;
   Detalhes: { id: string };
   FormItem: { id?: string; categoria?: string } | undefined;
+  Concluir: { id: string };
+  MeusSelos: undefined;
 };

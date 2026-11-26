@@ -1,16 +1,18 @@
 import React from 'react';
-import { Alert, StyleSheet, Switch, Text, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Botao } from '../componentes/Botao';
 import { Logo } from '../componentes/Logo';
 import { Tela } from '../componentes/Tela';
 import { useTema } from '../tema/TemaContext';
 import { fontes } from '../tema/cores';
+import { useNavigation } from '@react-navigation/native';
 import { useSessao } from '../sessao/SessaoContext';
 
 export function Perfil() {
   const { cores, modoEscuro, definir } = useTema();
   const { usuario, sair } = useSessao();
+  const nav = useNavigation<any>();
 
   const pedirSaida = () => {
     if (usuario?.convidado) {
@@ -53,6 +55,15 @@ export function Perfil() {
           thumbColor="#FFFFFF"
         />
       </View>
+
+      <Pressable onPress={() => nav.navigate('Abas', { screen: 'Categorias' })} style={[s.linha, { borderTopColor: cores.linha }]}>
+        <Text style={[s.linhaTxt, { color: cores.texto }]}>Minhas categorias</Text>
+        <Ionicons name="chevron-forward" size={20} color={cores.sub} />
+      </Pressable>
+      <Pressable onPress={() => nav.navigate('MeusSelos')} style={[s.linha, { borderTopColor: cores.linha }]}>
+        <Text style={[s.linhaTxt, { color: cores.texto }]}>Meus selos</Text>
+        <Ionicons name="chevron-forward" size={20} color={cores.sub} />
+      </Pressable>
 
       <Botao variante="perigo" titulo="Sair" onPress={pedirSaida} estilo={{ marginTop: 20 }} />
     </Tela>

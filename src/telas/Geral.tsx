@@ -11,24 +11,26 @@ import { useTema } from '../tema/TemaContext';
 import { fontes } from '../tema/cores';
 import { useDados } from '../dados/DadosContext';
 import { normalizar } from '../util/formatar';
-import { Item } from '../tipos';
+import { Item, NOME_SELO_PADRAO } from '../tipos';
 
 const PESO = { alta: 0, media: 1, baixa: 2 } as const;
 
 export function Geral() {
   const { cores, modoEscuro, definir } = useTema();
-  const { itens, categoria, principais, filhas, idsDe } = useDados();
+  const { itens, categoria, principais, filhas, idsDe, selos } = useDados();
 
   const [busca, setBusca] = useState('');
   const [cat, setCat] = useState<'todos' | 'sem' | string>('todos');
   const [sub, setSub] = useState<string | null>(null);
+  // situacao: null = em aberto (sem selo) | 'todos' = qualquer selo | nome do selo
+  const [situacao, setSituacao] = useState<null | 'todos' | string>(null);
   const [grade, setGrade] = useState(false);
-  const [painel, setPainel] = useState<null | 'categoria' | 'exibicao'>(null);
+  const [painel, setPainel] = useState<null | 'categoria' | 'exibicao' | 'situacao'>(null);
 
   const lista = useMemo(() => {
     const q = normalizar(busca.trim());
     return itens
-      .filter((i: Item) => !i.selo) // a lista padrão só mostra desejos ainda sem selo
+      .filter((i: Item) => (situacao === null ? !i.selo : situacao === 'todos' ? !!i.selo : i.selo === situacao))
       .filter((i) => {
         if (cat === 'sem') return !i.categoria;
         if (cat !== 'todos') {
@@ -39,11 +41,12 @@ export function Geral() {
       })
       .filter((i) => !q || normalizar(i.nome).includes(q) || normalizar(i.descricao).includes(q))
       .sort((a, b) => PESO[a.prioridade] - PESO[b.prioridade] || b.criadoEm.localeCompare(a.criadoEm));
-  }, [itens, busca, cat, sub, idsDe]);
+  }, [itens, busca, cat, sub, situacao, idsDe]);
 
   const nomeCat = cat === 'todos' ? 'Todos' : cat === 'sem' ? 'Sem categoria' : (categoria(cat)?.nome ?? 'Todos');
   const subs = cat !== 'todos' && cat !== 'sem' ? filhas(cat) : [];
-  const temFiltro = !!busca.trim() || cat !== 'todos';
+  const temFiltro = !!busca.trim() || cat !== 'todos' || situacao !== null;
+  const nomeSituacao = situacao === null ? 'Situação' : situacao === 'todos' ? 'Todos os selos' : situacao;
 
   const escolher = (c: string) => {
     setCat(c);
@@ -73,6 +76,7 @@ export function Geral() {
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.pilulas}>
         <Chip rotulo={`${nomeCat} ▾`} ativo={cat !== 'todos'} onPress={() => setPainel('categoria')} />
         <Chip rotulo="Exibição ▾" onPress={() => setPainel('exibicao')} />
+        <Chip rotulo={`${nomeSituacao} ▾`} ativo={situacao !== null} onPress={() => setPainel('situacao')} />
       </ScrollView>
 
       {subs.length ? (
@@ -100,6 +104,15 @@ export function Geral() {
           <Opcao key={c.id} rotulo={c.nome} marcada={cat === c.id} onPress={() => escolher(c.id)} />
         ))}
         <Opcao rotulo="Sem categoria" marcada={cat === 'sem'} onPress={() => escolher('sem')} />
+      </FolhaInferior>
+
+      <FolhaInferior visivel={painel === 'situacao'} aoFechar={() => setPainel(null)} titulo="Situação">
+        <Opcao primeira rotulo="Em aberto" marcada={situacao === null} onPress={() => { setSituacao(null); setPainel(null); }} />
+        <Opcao rotulo="Todos (com selo)" marcada={situacao === 'todos'} onPress={() => { setSituacao('todos'); setPainel(null); }} />
+        <Opcao rotulo="Concluídos" marcada={situacao === NOME_SELO_PADRAO} onPress={() => { setSituacao(NOME_SELO_PADRAO); setPainel(null); }} />
+        {selos.map((x) => (
+          <Opcao key={x.id} rotulo={x.nome} marcada={situacao === x.nome} onPress={() => { setSituacao(x.nome); setPainel(null); }} />
+        ))}
       </FolhaInferior>
 
       <FolhaInferior visivel={painel === 'exibicao'} aoFechar={() => setPainel(null)} titulo="Exibição">
