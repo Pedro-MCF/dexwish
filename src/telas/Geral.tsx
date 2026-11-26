@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Logo } from '../componentes/Logo';
 import { Tela } from '../componentes/Tela';
@@ -17,7 +17,7 @@ const PESO = { alta: 0, media: 1, baixa: 2 } as const;
 
 export function Geral() {
   const { cores, modoEscuro, definir } = useTema();
-  const { itens, categoria, principais, filhas, idsDe, selos } = useDados();
+  const { itens, categoria, principais, filhas, idsDe, selos, erro, carregando, recarregar } = useDados();
 
   const [busca, setBusca] = useState('');
   const [cat, setCat] = useState<'todos' | 'sem' | string>('todos');
@@ -88,6 +88,13 @@ export function Geral() {
         </ScrollView>
       ) : null}
 
+      {erro ? (
+        <Pressable onPress={recarregar}>
+          <Text style={[s.erro, { color: cores.erro }]}>{erro} Toque para tentar de novo.</Text>
+        </Pressable>
+      ) : null}
+      {carregando && itens.length === 0 ? <ActivityIndicator color={cores.acento} /> : null}
+
       {lista.length === 0 ? (
         temFiltro ? (
           <Vazio icone="search-outline" titulo="Nada encontrado" texto="Tente outra busca ou mude o filtro." />
@@ -135,5 +142,6 @@ const s = StyleSheet.create({
   h1: { fontFamily: fontes.tituloMedio, fontSize: 32 },
   busca: { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1, borderRadius: 16, paddingHorizontal: 14 },
   buscaInput: { flex: 1, fontFamily: fontes.texto, fontSize: 16, paddingVertical: 12 },
+  erro: { fontFamily: fontes.textoSemi, fontSize: 14 },
   pilulas: { gap: 8, paddingRight: 8 },
 });
