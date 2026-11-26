@@ -5,11 +5,12 @@ import { Tela, Topo } from '../componentes/Tela';
 import { Chip } from '../componentes/Chip';
 import { Vazio } from '../componentes/Vazio';
 import { Botao } from '../componentes/Botao';
+import { ListaItens } from '../componentes/ListaItens';
 import { useTema } from '../tema/TemaContext';
 import { fontes } from '../tema/cores';
 import { useDados } from '../dados/DadosContext';
 
-/** Detalhe de uma categoria: subcategorias e quantidade de desejos. A lista de desejos chega na Etapa 4. */
+/** Detalhe de uma categoria: subcategorias e os desejos dela. */
 export function Categoria() {
   const { cores } = useTema();
   const nav = useNavigation<any>();
@@ -40,6 +41,13 @@ export function Categoria() {
       ) : (
         <Text style={[s.sub, { color: cores.sub }]}>Nenhuma. Toque em Editar para criar.</Text>
       )}
+      <Text style={[s.rotulo, { color: cores.texto }]}>Desejos</Text>
+      {itensDe(c.id).length ? (
+        <ListaItens itens={itensDe(c.id)} grade={false} />
+      ) : (
+        <Text style={[s.sub, { color: cores.sub }]}>Nenhum desejo aqui ainda.</Text>
+      )}
+      <Botao titulo="+ Novo desejo nesta categoria" onPress={() => nav.navigate('FormItem', { categoria: c.id })} />
       <Botao titulo="Editar categoria" variante="alternativo" onPress={() => nav.navigate('FormCategoria', { id: c.id })} />
     </Tela>
   );

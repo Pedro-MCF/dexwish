@@ -1,13 +1,29 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { supabase, traduzirErro } from '../lib/supabase';
 import { useSessao, Resultado } from '../sessao/SessaoContext';
-import { Categoria, Item, itemDeLinha, Selo } from '../tipos';
+import { Categoria, Item, itemDeLinha, Prioridade, Selo } from '../tipos';
 import { normalizar } from '../util/formatar';
 
 export type SubForm = { id?: string; nome: string };
 export type DadosCategoria = { id?: string; nome: string; pai?: string | null; subs?: SubForm[] };
 
+export type DadosItem = {
+  id?: string;
+  nome: string;
+  descricao: string;
+  categoria: string | null;
+  prioridade: Prioridade;
+  preco: number | null;
+  link: string;
+  imagem: string;
+};
+
 type DadosCtx = {
+  ultimaExclusao: { id: string; nome: string } | null;
+  salvarItem: (d: DadosItem) => Promise<Resultado & { id?: string }>;
+  excluirItem: (id: string) => Promise<Resultado>;
+  desfazerExclusao: () => Promise<void>;
+  limparExclusao: () => void;
   categorias: Categoria[];
   itens: Item[];
   selos: Selo[];
@@ -39,6 +55,7 @@ export function DadosProvider({ children }: { children: React.ReactNode }) {
   const [selos, setSelos] = useState<Selo[]>([]);
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState('');
+  const [ultimaExclusao, setUltimaExclusao] = useState<{ id: string; nome: string } | null>(null);
 
   const recarregar = useCallback(async () => {
     if (!uid) {
@@ -167,13 +184,64 @@ export function DadosProvider({ children }: { children: React.ReactNode }) {
     [recarregar],
   );
 
+  // ---------- desejos ----------
+  const salvarItem = useCallback(
+    async (d: DadosItem): Promise<Resultado & { id?: string }> => {
+      const nome = d.nome.trim();
+      if (!nome) return { erro: 'Faltou o nome do desejo.' };
+      const linha = {
+        nome,
+        descricao: d.descricao.trim(),
+        id_categoria: d.categoria,
+        prioridade: d.prioridade,
+        preco: d.preco,
+        link: d.link.trim(),
+        imagem_url: d.imagem,
+      };
+      if (d.id) {
+        const { error } = await supabase.from('item').update(linha).eq('id', d.id);
+        if (error) return { erro: traduzirErro(error.message) };
+        await recarregar();
+        return { id: d.id };
+      }
+      const { data, error } = await supabase.from('item').insert({ ...linha, id_usuario: uid }).select('id').single();
+      if (error || !data) return { erro: traduzirErro(error?.message) };
+      await recarregar();
+      return { id: data.id as string };
+    },
+    [uid, recarregar],
+  );
+
+  // Exclusão "suave": o desejo só ganha uma data em excluido_em, então dá para desfazer.
+  const excluirItem = useCallback(
+    async (id: string): Promise<Resultado> => {
+      const alvo = itens.find((i) => i.id === id);
+      const { error } = await supabase.from('item').update({ excluido_em: new Date().toISOString() }).eq('id', id);
+      if (error) return { erro: traduzirErro(error.message) };
+      setUltimaExclusao({ id, nome: alvo?.nome ?? 'Desejo' });
+      await recarregar();
+      return {};
+    },
+    [itens, recarregar],
+  );
+
+  const desfazerExclusao = useCallback(async () => {
+    if (!ultimaExclusao) return;
+    await supabase.from('item').update({ excluido_em: null }).eq('id', ultimaExclusao.id);
+    setUltimaExclusao(null);
+    await recarregar();
+  }, [ultimaExclusao, recarregar]);
+
+  const limparExclusao = useCallback(() => setUltimaExclusao(null), []);
+
   const valor = useMemo(
     () => ({
       categorias, itens, selos, carregando, erro, recarregar,
       categoria, principais, filhas, caminho, idsDe, itensDe,
       salvarCategoria, excluirCategoria,
+      ultimaExclusao, salvarItem, excluirItem, desfazerExclusao, limparExclusao,
     }),
-    [categorias, itens, selos, carregando, erro, recarregar, categoria, principais, filhas, caminho, idsDe, itensDe, salvarCategoria, excluirCategoria],
+    [categorias, itens, selos, carregando, erro, recarregar, categoria, principais, filhas, caminho, idsDe, itensDe, salvarCategoria, excluirCategoria, ultimaExclusao, salvarItem, excluirItem, desfazerExclusao, limparExclusao],
   );
   return <Ctx.Provider value={valor}>{children}</Ctx.Provider>;
 }

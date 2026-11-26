@@ -16,4 +16,6 @@ export type RotasApp = {
   Abas: NavigatorScreenParams<RotasAbas> | undefined;
   Categoria: { id: string };
   FormCategoria: { id?: string } | undefined;
+  Detalhes: { id: string };
+  FormItem: { id?: string; categoria?: string } | undefined;
 };
