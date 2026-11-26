@@ -12,6 +12,8 @@ import { RecuperarSenha } from '../telas/RecuperarSenha';
 import { Geral } from '../telas/Geral';
 import { Categorias } from '../telas/Categorias';
 import { Perfil } from '../telas/Perfil';
+import { Categoria } from '../telas/Categoria';
+import { FormCategoria } from '../telas/FormCategoria';
 import type { RotasAbas, RotasApp, RotasAuth } from './tipos';
 
 const Auth = createNativeStackNavigator<RotasAuth>();
@@ -59,6 +61,8 @@ export function Navegacao() {
       {usuario ? (
         <Pilha.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: cores.fundo } }}>
           <Pilha.Screen name="Abas" component={TelasComAbas} />
+          <Pilha.Screen name="Categoria" component={Categoria} />
+          <Pilha.Screen name="FormCategoria" component={FormCategoria} />
         </Pilha.Navigator>
       ) : (
         <Auth.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: cores.fundo } }}>

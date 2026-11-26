@@ -18,6 +18,7 @@ import {
 import { BebasNeue_400Regular } from '@expo-google-fonts/bebas-neue';
 import { TemaProvider, useTema } from './src/tema/TemaContext';
 import { SessaoProvider } from './src/sessao/SessaoContext';
+import { DadosProvider } from './src/dados/DadosContext';
 import { Navegacao } from './src/navegacao';
 import { configurado } from './src/lib/supabase';
 import { Text } from 'react-native';
@@ -68,7 +69,9 @@ export default function App() {
     <SafeAreaProvider>
       <TemaProvider>
         <SessaoProvider>
-          <Raiz />
+          <DadosProvider>
+            <Raiz />
+          </DadosProvider>
         </SessaoProvider>
       </TemaProvider>
     </SafeAreaProvider>
