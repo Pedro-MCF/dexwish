@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Switch, Text, View } from 'react-native';
+import { Alert, StyleSheet, Switch, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Botao } from '../componentes/Botao';
 import { Logo } from '../componentes/Logo';
@@ -12,6 +12,21 @@ export function Perfil() {
   const { cores, modoEscuro, definir } = useTema();
   const { usuario, sair } = useSessao();
 
+  const pedirSaida = () => {
+    if (usuario?.convidado) {
+      Alert.alert(
+        'Sair da conta de convidado?',
+        'Uma conta de convidado não pode ser recuperada: ao sair, você perde seus desejos. Crie uma conta para guardá-los.',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          { text: 'Sair e apagar', style: 'destructive', onPress: () => sair() },
+        ],
+      );
+    } else {
+      sair();
+    }
+  };
+
   return (
     <Tela comAbas>
       <View style={s.logo}>
@@ -22,7 +37,11 @@ export function Perfil() {
           <Ionicons name="person" size={46} color={cores.sub} />
         </View>
         <Text style={[s.nome, { color: cores.texto }]}>{usuario?.nome}</Text>
-        {usuario?.convidado ? <Text style={[s.sub, { color: cores.sub }]}>Conta de convidado</Text> : null}
+        {usuario?.convidado ? (
+          <Text style={[s.sub, { color: cores.sub }]}>Conta de convidado</Text>
+        ) : usuario?.email ? (
+          <Text style={[s.sub, { color: cores.sub }]}>{usuario.email}</Text>
+        ) : null}
       </View>
 
       <View style={[s.linha, { borderTopColor: cores.linha }]}>
@@ -35,7 +54,7 @@ export function Perfil() {
         />
       </View>
 
-      <Botao variante="perigo" titulo="Sair" onPress={sair} estilo={{ marginTop: 20 }} />
+      <Botao variante="perigo" titulo="Sair" onPress={pedirSaida} estilo={{ marginTop: 20 }} />
     </Tela>
   );
 }

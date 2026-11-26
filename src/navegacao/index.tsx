@@ -1,5 +1,5 @@
 import React from 'react';
-import { Alert } from 'react-native';
+import { ActivityIndicator, Alert, View } from 'react-native';
 import { DarkTheme, DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -38,13 +38,21 @@ function TelasComAbas() {
 
 export function Navegacao() {
   const { cores, modoEscuro } = useTema();
-  const { usuario } = useSessao();
+  const { usuario, carregando } = useSessao();
 
   const base = modoEscuro ? DarkTheme : DefaultTheme;
   const tema = {
     ...base,
     colors: { ...base.colors, background: cores.fundo, card: cores.fundo, text: cores.texto, border: cores.linha, primary: cores.acento },
   };
+
+  if (carregando) {
+    return (
+      <View style={{ flex: 1, backgroundColor: cores.fundo, alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator color={cores.acento} />
+      </View>
+    );
+  }
 
   return (
     <NavigationContainer theme={tema}>

@@ -19,6 +19,8 @@ import { BebasNeue_400Regular } from '@expo-google-fonts/bebas-neue';
 import { TemaProvider, useTema } from './src/tema/TemaContext';
 import { SessaoProvider } from './src/sessao/SessaoContext';
 import { Navegacao } from './src/navegacao';
+import { configurado } from './src/lib/supabase';
+import { Text } from 'react-native';
 
 function Raiz() {
   const { pronto, modoEscuro, cores } = useTema();
@@ -38,6 +40,18 @@ function Raiz() {
     return (
       <View style={{ flex: 1, backgroundColor: cores.fundo, alignItems: 'center', justifyContent: 'center' }}>
         <ActivityIndicator color={cores.acento} />
+      </View>
+    );
+  }
+  if (!configurado) {
+    return (
+      <View style={{ flex: 1, backgroundColor: cores.fundo, alignItems: 'center', justifyContent: 'center', padding: 28, gap: 12 }}>
+        <Text style={{ color: cores.texto, fontFamily: 'Montserrat_600SemiBold', fontSize: 20, textAlign: 'center' }}>
+          Falta configurar o Supabase
+        </Text>
+        <Text style={{ color: cores.sub, fontFamily: 'Raleway_400Regular', fontSize: 15, textAlign: 'center', lineHeight: 22 }}>
+          Copie o arquivo .env.example para .env, cole a URL e a chave do seu projeto e reinicie com: npx expo start -c
+        </Text>
       </View>
     );
   }
