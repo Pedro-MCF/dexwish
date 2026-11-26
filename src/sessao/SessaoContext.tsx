@@ -27,6 +27,8 @@ type SessaoCtx = {
   /** Passo 2: confere o código e define a nova senha. */
   redefinirSenha: (email: string, codigo: string, novaSenha: string) => Promise<Resultado>;
   entrarComGoogle: () => Promise<Resultado>;
+  /** Troca a foto de perfil (url vazia remove). */
+  definirAvatar: (url: string | null) => Promise<Resultado>;
   sair: () => Promise<void>;
 };
 
@@ -69,6 +71,17 @@ export function SessaoProvider({ children }: { children: React.ReactNode }) {
       vivo = false;
     };
   }, [user?.id]);
+
+  const definirAvatar = useCallback(
+    async (url: string | null): Promise<Resultado> => {
+      if (!user) return { erro: 'Você não está logado.' };
+      const { error } = await supabase.from('perfil').update({ avatar_url: url }).eq('id', user.id);
+      if (error) return { erro: traduzirErro(error.message) };
+      setPerfil((p) => (p ? { ...p, avatar_url: url } : p));
+      return {};
+    },
+    [user],
+  );
 
   const usuario: Usuario | null = useMemo(() => {
     if (!user) return null;
@@ -143,8 +156,8 @@ export function SessaoProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const valor = useMemo(
-    () => ({ usuario, carregando, entrarConvidado, entrar, cadastrar, recuperarSenha, redefinirSenha, entrarComGoogle, sair }),
-    [usuario, carregando, entrarConvidado, entrar, cadastrar, recuperarSenha, redefinirSenha, entrarComGoogle, sair],
+    () => ({ usuario, carregando, entrarConvidado, entrar, cadastrar, recuperarSenha, redefinirSenha, entrarComGoogle, definirAvatar, sair }),
+    [usuario, carregando, entrarConvidado, entrar, cadastrar, recuperarSenha, redefinirSenha, entrarComGoogle, definirAvatar, sair],
   );
   return <Ctx.Provider value={valor}>{children}</Ctx.Provider>;
 }

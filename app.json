@@ -23,13 +23,17 @@
         "backgroundColor": "#1B1B1B"
       }
     },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "O DexWish precisa acessar suas fotos para você escolher a imagem do desejo e do perfil.",
+          "cameraPermission": "O DexWish precisa da câmera para você fotografar o desejo ou a foto de perfil."
+        }
+      ]
+    ],
     "web": {
       "favicon": "./assets/favicon.png"
-    },
-    "plugins": [
-      "expo-font",
-      "expo-status-bar",
-      "expo-web-browser"
-    ]
+    }
   }
 }
